@@ -1,14 +1,13 @@
-module Eval (
-  runEval
-) where
-
-import qualified Data.Map             as Map
-import           Pretty
-import           Syntax
+module Eval
+  ( runEval
+  , Scope
+  ) where
 
 import           Control.Monad.State
 import           Control.Monad.Writer
-
+import qualified Data.Map             as Map
+import           Pretty
+import           Syntax
 
 data Value
   = VInt Integer
@@ -31,18 +30,18 @@ inc m = do
   modify $ \s -> s { depth = (depth s) - 1 }
   return out
 
-red :: Expr -> Eval ()
-red x = do
+red :: Expr -> Scope -> Eval ()
+red x s = do
   d <- gets depth
-  tell [(d, x)]
+  tell [(d, x, s)]
   return ()
 
-type Step = (Int, Expr)
+type Step = (Int, Expr, Scope)
 type Eval a = WriterT [Step] (State EvalState) a
 
 type Scope = Map.Map String Value
 
-eval :: Eval.Scope -> Expr -> Eval Value
+eval :: Scope -> Expr -> Eval Value
 eval env expr = case expr of
 
   Lit (LInt x) -> do
@@ -52,17 +51,18 @@ eval env expr = case expr of
     return $ VBool x
 
   Var x -> do
-    red expr
+    red expr env
     return $ env Map.! x
 
   Lam x body -> inc $ do
+    red body env
     return (VClosure x body env)
 
   App a b -> inc $ do
+    red a env
     x <- eval env a
-    red a
+    red b env
     y <- eval env b
-    red b
     apply x y
 
 extend :: Scope -> String -> Value -> Scope

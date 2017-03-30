@@ -1,16 +1,16 @@
 module Main where
 
-import Syntax
-import Parser
-import Eval
-import Pretty
+import           Eval
+import           Parser
+import           Pretty
+import           Syntax
 
-import Control.Monad
-import Control.Monad.Trans
-import System.Console.Haskeline
+import           Control.Monad
+import           Control.Monad.Trans
+import           System.Console.Haskeline
 
-showStep :: (Int, Expr) -> IO ()
-showStep (d, x) = putStrLn ((replicate d ' ') ++ "=> " ++ ppexpr x)
+showStep :: (Int, Expr, Scope) -> IO ()
+showStep (d, x, s) = putStrLn $ (replicate d ' ') ++ "=> " ++ ppexpr x ++ " -- scope: " ++ show s
 
 process :: String -> IO ()
 process line = do
@@ -19,6 +19,7 @@ process line = do
     Left err -> print err
     Right ex -> do
       let (out, ~steps) = runEval ex
+      putStrLn $ ppexpr ex
       mapM_ showStep steps
       print out
 

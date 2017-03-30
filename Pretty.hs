@@ -1,13 +1,13 @@
+{-# LANGUAGE FlexibleInstances    #-}
 {-# LANGUAGE TypeSynonymInstances #-}
-{-# LANGUAGE FlexibleInstances #-}
 
 module Pretty (
   ppexpr
 ) where
 
-import Syntax
+import           Syntax
 
-import Text.PrettyPrint
+import           Text.PrettyPrint
 
 class Pretty p where
   ppr :: Int -> p -> Doc
@@ -23,9 +23,9 @@ instance Pretty Expr where
   ppr _ (Var x)         = text x
   ppr _ (Lit (LInt a))  = text (show a)
   ppr _ (Lit (LBool b)) = text (show b)
-  ppr p e@(App _ _)     = parensIf (p>0) (ppr p f <+> sep (map (ppr (p+1)) xs))
+  ppr p e@(App _ _)     = parensIf True (ppr p f <+> sep (map (ppr (p+1)) xs))
     where (f, xs) = viewApp e
-  ppr p e@(Lam _ _)     = parensIf (p>0) $ char '\\' <> hsep vars <+> text "." <+> body
+  ppr p e@(Lam _ _)     = parensIf True $ char '\\' <> hsep vars <+> text "." <+> body
     where
       vars = map (ppr 0) (viewVars e)
       body = ppr (p+1) (viewBody e)
